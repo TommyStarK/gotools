@@ -1,3 +1,3 @@
 module github.com/TommyStarL/gotools
 
-go 1.13
+go 1.14
