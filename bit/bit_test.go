@@ -23,3 +23,10 @@ func TestGetBit(t *testing.T) {
 		t.Error("80: 0101 0000 bit at pos 4 should be set")
 	}
 }
+
+func BenchmarkGetBit(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		GetBit(i, 4)
+	}
+}
