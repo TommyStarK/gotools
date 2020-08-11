@@ -1,6 +1,8 @@
 package fifo
 
-import "sync"
+import (
+	"sync"
+)
 
 type element struct {
 	data interface{}
@@ -9,7 +11,7 @@ type element struct {
 
 // Fifo represents the FIFO
 type Fifo struct {
-	len  int
+	size int
 	head *element
 	tail *element
 
@@ -19,7 +21,7 @@ type Fifo struct {
 // NewFifo creates a new empty FIFO
 func NewFifo() *Fifo {
 	return &Fifo{
-		len:   0,
+		size:  0,
 		head:  nil,
 		tail:  nil,
 		mutex: sync.RWMutex{},
@@ -35,6 +37,7 @@ func (f *Fifo) Dequeue() interface{} {
 		return nil
 	}
 
+	f.size--
 	head := f.head
 	if head.next == nil {
 		f.head = nil
@@ -43,7 +46,6 @@ func (f *Fifo) Dequeue() interface{} {
 		f.head = head.next
 	}
 
-	f.len--
 	return head.data
 }
 
@@ -52,33 +54,90 @@ func (f *Fifo) Enqueue(data interface{}) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
-	element := &element{
+	f.size++
+	var element = &element{
 		data: data,
-		next: nil,
 	}
 
 	if f.head == nil && f.tail == nil {
 		f.head = element
 		f.tail = element
-	} else {
-		last := f.tail
-		last.next = element
-		f.tail = element
+		return
 	}
 
-	f.len++
+	last := f.tail
+	last.next = element
+	f.tail = element
+	return
 }
 
 // IsEmpty returns whether the FIFO is empty or not
-func (f *Fifo) IsEmpty() bool {
+func (f *Fifo) IsEmpty() (empty bool) {
 	f.mutex.RLock()
-	defer f.mutex.RUnlock()
-	return f.len == 0 && f.head == nil && f.tail == nil
+	empty = f.size == 0
+	f.mutex.RUnlock()
+	return
 }
 
 // Size returns the actual FIFO size
-func (f *Fifo) Size() int {
+func (f *Fifo) Size() (size int) {
 	f.mutex.RLock()
+	size = f.size
 	f.mutex.RUnlock()
-	return f.len
+	return
 }
+
+// const defaulFifoCapacity = 1 << 6
+
+// // Fifo represents the FIFO
+// type Fifo struct {
+// 	items []interface{}
+
+// 	mutex sync.RWMutex
+// }
+
+// // NewFifo creates a new empty FIFO
+// func NewFifo() *Fifo {
+// 	return &Fifo{
+// 		items: make([]interface{}, 0, defaulFifoCapacity),
+// 		mutex: sync.RWMutex{},
+// 	}
+// }
+
+// // Dequeue returns the first element of the FIFO or nil
+// func (f *Fifo) Dequeue() interface{} {
+// 	f.mutex.Lock()
+// 	defer f.mutex.Unlock()
+
+// 	if len(f.items) == 0 {
+// 		return nil
+// 	}
+
+// 	data := f.items[0]
+// 	f.items = f.items[1:]
+// 	return data
+// }
+
+// // Enqueue allows to enqueue some data
+// func (f *Fifo) Enqueue(data interface{}) {
+// 	f.mutex.Lock()
+// 	f.items = append(f.items, data)
+// 	f.mutex.Unlock()
+// 	return
+// }
+
+// // IsEmpty returns whether the FIFO is empty or not
+// func (f *Fifo) IsEmpty() (empty bool) {
+// 	f.mutex.RLock()
+// 	empty = len(f.items) == 0
+// 	f.mutex.RUnlock()
+// 	return
+// }
+
+// // Size returns the actual FIFO size
+// func (f *Fifo) Size() (size int) {
+// 	f.mutex.RLock()
+// 	size = len(f.items)
+// 	f.mutex.RUnlock()
+// 	return
+// }

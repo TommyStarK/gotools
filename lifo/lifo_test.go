@@ -15,6 +15,11 @@ func TestLifoCapabilites(t *testing.T) {
 		t.Fail()
 	}
 
+	if item := q.Dequeue(); item != nil {
+		t.Log("Dequeuing an empty LIFO should return nil")
+		t.Fail()
+	}
+
 	q.Enqueue(1)
 
 	if q.IsEmpty() {

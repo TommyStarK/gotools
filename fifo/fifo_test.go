@@ -15,6 +15,11 @@ func TestFifoCapabilities(t *testing.T) {
 		t.Fail()
 	}
 
+	if item := q.Dequeue(); item != nil {
+		t.Log("Dequeuing an empty FIFO should return nil")
+		t.Fail()
+	}
+
 	q.Enqueue(1)
 
 	if q.IsEmpty() {
@@ -34,6 +39,7 @@ func TestFifoCapabilities(t *testing.T) {
 
 	q.Enqueue("two")
 	q.Enqueue(true)
+	q.Enqueue(make(map[string]string))
 
 	if item := q.Dequeue(); item.(string) != "two" {
 		t.Log("element should be of type string with the value 'two'")
